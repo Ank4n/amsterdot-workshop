@@ -2,6 +2,8 @@
 
 Docs: https://evmdocs.acala.network
 
+## Get the basic running
+
 - Prepare
   - Use Github Codespaces
   - OR use VSCode devcontainer
@@ -10,6 +12,9 @@ Docs: https://evmdocs.acala.network
   - `make run-eth`
   - OR use docker
     - `docker run --rm -p 9944:9944 -p 9933:9933 ghcr.io/acalanetwork/mandala-node:sha-ce49e64 --dev -levm=debug --instant-sealing --ws-external --rpc-external --rpc-cors=all`
+- Open the polkadot-js apps
+  - https://polkadot.js.org/apps/#/explorer
+  - Choose local network
 - Run `eth-rpc-adapter`
   - `LOCAL_MODE=1 npx @acala-network/eth-rpc-adapter@2.4.4`
 - Setup Metamask:
@@ -27,6 +32,45 @@ Docs: https://evmdocs.acala.network
   - Try deploy contracts
   - Modify gas price to `201.92480561` GWEI if contract deployment failed
     - Refer to https://evmdocs.acala.network/reference/common-errors for common errors
+
+## Call EVM from Pallet
+
+- Deploy ERC20 and use it with pallets
+  - Deploy the [erc20.sol](./workshop-files/erc20.sol) using Remix
+- Bind EVM account
+  - Use https://evm.acala.network/#/Bind%20Account
+    - Substrate address: `5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty`
+    - Chain ID: 595
+    - Genesis hash: Query from https://polkadot.js.org/apps/#/explorer/query/0
+    - Sign
+  - Use the extrinsic page: https://polkadot.js.org/apps/#/extrinsics
+    - Account: Bob
+    - evmAccounts.claimAccount
+      - Address: `0x75E480dB528101a381Ce68544611C169Ad7EB342`
+      - Signature: The signature
+    - Submit
+    - Check event to confirm account merge
+- Transfer ERC20 from Substrate pallet
+  - Extrinsic page
+    - Account: Bob
+    - currencies.transfer
+      - Dest: Charlie
+      - CurrencyId: Erc20(the erc20 address)
+      - Amount: the amount
+    - Submit
+    - Check event to confirm transfer
+- Behind the scenes:
+  - https://github.com/xlc/amsterdot-workshop/blob/719a62365a0f5ab6d8556d05a741b887c0b2df42/modules/currencies/src/lib.rs#L338-L353
+  - https://github.com/xlc/amsterdot-workshop/blob/719a62365a0f5ab6d8556d05a741b887c0b2df42/modules/evm-bridge/src/lib.rs#L172-L203
+
+## Call Pallet from EVM
+
+- Add ACA Mirrow Token `0x0000000000000000000100000000000000000000` to MetaMask
+- Transfer the ERC20
+  - The Native balance will also change
+  - Native balance.transfer event will also be emitted
+- Predeploy contracts: https://github.com/AcalaNetwork/predeploy-contracts
+- Precompile contracts: https://github.com/xlc/amsterdot-workshop/blob/719a62365a0f5ab6d8556d05a741b887c0b2df42/runtime/common/src/precompile/mod.rs#L188-L267
 
 ----
 
@@ -53,6 +97,9 @@ Docs: https://evmdocs.acala.network
 <!-- TOC -->
 
 - [amsterDOT Acala Workshop](#amsterdot-acala-workshop)
+	- [Get the basic running](#get-the-basic-running)
+	- [Call EVM from Pallet](#call-evm-from-pallet)
+	- [Call Pallet from EVM](#call-pallet-from-evm)
 - [1. Introduction](#1-introduction)
 - [2. Overview](#2-overview)
 	- [2.1. aUSD and the Honzon stablecoin protocol](#21-ausd-and-the-honzon-stablecoin-protocol)
