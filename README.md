@@ -72,6 +72,30 @@ Docs: https://evmdocs.acala.network
 - Predeploy contracts: https://github.com/AcalaNetwork/predeploy-contracts
 - Precompile contracts: https://github.com/xlc/amsterdot-workshop/blob/719a62365a0f5ab6d8556d05a741b887c0b2df42/runtime/common/src/precompile/mod.rs#L188-L267
 
+## Build a Smart Contract Arena pallet
+
+- Call
+  - fn register(origin, contract: H160)
+- Pallet
+  - fn on_initialize
+    - for x in instnaces
+      - for y in instances
+        - if x != y
+          - play(x, y)
+- Types
+  - struct ContractInfo
+    - point: u128
+    - win: u128
+    - lose: u128
+    - draw: u128
+  - enum Contender
+    - Contract(H160),
+    - Bot1,
+    - Bot2,
+- Storages
+  - ContenderInfos: Contender => ContractInfo
+  - Contenders: u32 => Contender
+
 ----
 
 <p align="center">
@@ -100,6 +124,7 @@ Docs: https://evmdocs.acala.network
 	- [Get the basic running](#get-the-basic-running)
 	- [Call EVM from Pallet](#call-evm-from-pallet)
 	- [Call Pallet from EVM](#call-pallet-from-evm)
+	- [Build a Smart Contract Arena pallet](#build-a-smart-contract-arena-pallet)
 - [1. Introduction](#1-introduction)
 - [2. Overview](#2-overview)
 	- [2.1. aUSD and the Honzon stablecoin protocol](#21-ausd-and-the-honzon-stablecoin-protocol)
