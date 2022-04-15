@@ -1,3 +1,35 @@
+# amsterDOT Acala Workshop
+
+Docs: https://evmdocs.acala.network
+
+- Prepare
+  - Use Github Codespaces
+  - OR use VSCode devcontainer
+  - OR install deps by following instructions [here](#3-building)
+- Run a local instant sealing devnet
+  - `make run-eth`
+  - OR use docker
+    - `docker run --rm -p 9944:9944 -p 9933:9933 ghcr.io/acalanetwork/mandala-node:sha-ce49e64 --dev -levm=debug --instant-sealing --ws-external --rpc-external --rpc-cors=all`
+- Run `eth-rpc-adapter`
+  - `LOCAL_MODE=1 npx @acala-network/eth-rpc-adapter@2.4.4`
+- Setup Metamask:
+  - Mnemonic: `fox sight canyon orphan hotel grow hedgehog build bless august weather swarm`
+  - Add new network
+    - Name: Mandala Local
+    - RPC: http://localhost:8545
+    - Chain ID: 595
+    - Symbol: ACA
+- Try send some ACA with Metamask
+  - Note: Please don't modify gas price or it could fail
+- Remix
+  - Use injected Web3 provider
+  - Create new workspace
+  - Try deploy contracts
+  - Modify gas price to `201.92480561` GWEI if contract deployment failed
+    - Refer to https://evmdocs.acala.network/reference/common-errors for common errors
+
+----
+
 <p align="center">
   <img src="https://acala.subdao.com/logo/acala-logo-horizontal-gradient.png" width="460">
 </p>
@@ -20,14 +52,25 @@
 
 <!-- TOC -->
 
+- [amsterDOT Acala Workshop](#amsterdot-acala-workshop)
 - [1. Introduction](#1-introduction)
 - [2. Overview](#2-overview)
-  - [2.1. aUSD and the Honzon stablecoin protocol](#21-ausd-and-the-honzon-stablecoin-protocol)
-  - [2.2. Acala Network Economic Model](#22-acala-network-economic-model)
+	- [2.1. aUSD and the Honzon stablecoin protocol](#21-ausd-and-the-honzon-stablecoin-protocol)
+	- [2.2. Acala Network Economic Model](#22-acala-network-economic-model)
 - [3. Building](#3-building)
+	- [NOTE](#note)
 - [4. Run](#4-run)
 - [5. Development](#5-development)
 - [6. Bug Bounty :bug:](#6-bug-bounty-bug)
+- [7. Bench Bot](#7-bench-bot)
+	- [Generate module weights](#generate-module-weights)
+	- [Generate runtime weights](#generate-runtime-weights)
+	- [Bench Acala EVM+](#bench-acala-evm)
+- [8. Migration testing runtime](#8-migration-testing-runtime)
+	- [Try testing runtime](#try-testing-runtime)
+- [9. Run local testnet with parachain-launch](#9-run-local-testnet-with-parachain-launch)
+- [10. Run local testnet with polkadot-launch](#10-run-local-testnet-with-polkadot-launch)
+- [11. Build For Release](#11-build-for-release)
 
 <!-- /TOC -->
 
@@ -152,7 +195,7 @@ __Note:__ All build command from Makefile are designed for local development pur
 
 # 6. Bug Bounty :bug:
 
-The Bug Bounty Program includes only on-chain vulnerabilities that can lead to significant economic loss or instability of the network. You check details of the Bug Bounty or Submit a vulnerability here: 
+The Bug Bounty Program includes only on-chain vulnerabilities that can lead to significant economic loss or instability of the network. You check details of the Bug Bounty or Submit a vulnerability here:
 https://immunefi.com/bounty/acala/
 
 # 7. Bench Bot
