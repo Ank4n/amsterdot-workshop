@@ -5884,6 +5884,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "module-arena"
+version = "2.5.0"
+dependencies = [
+ "acala-primitives",
+ "frame-support",
+ "frame-system",
+ "module-support",
+ "orml-tokens",
+ "orml-traits",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "module-asset-registry"
 version = "2.5.0"
 dependencies = [
