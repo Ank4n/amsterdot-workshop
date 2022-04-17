@@ -78,23 +78,58 @@ Docs: https://evmdocs.acala.network
   - fn register(origin, contract: H160)
 - Pallet
   - fn on_initialize
-    - for x in instnaces
+    - let game_points = BTreeMap::new()
+    - for x in instances.filter(x => x.is_contract)
       - for y in instances
-        - if x != y
-          - play(x, y)
+        - play(x, y)
+        - if draw
+          - game_points[x] += 1
+          - game_points[y] += 1
+        - else
+          - game_points[winner] += 2
+          - game_points[loser] -= 1
+    - points = game_points sorted
+    - remove loster instances
+    - duplicate winner instances
+    - add queued contracts
+    - apply game_points to global point board
 - Types
   - struct ContractInfo
     - point: u128
-    - win: u128
-    - lose: u128
-    - draw: u128
+    - instance_count: u32
   - enum Contender
     - Contract(H160),
-    - Bot1,
-    - Bot2,
+    - AlwaysZero,
+    - BlockNumber,
+    - CopyCat,
 - Storages
   - ContenderInfos: Contender => ContractInfo
   - Contenders: u32 => Contender
+  - ContentderInstancesCount: u32
+  - NextContenderInstanceId: u32
+  - ContenderQueue: Vec<Contender>
+- Config
+  - const PlayPerRound: u32
+  - const MaxContenderInstancesCount: u32
+  - const MaxQueueSize: u32
+  - const WinnerCount: u32
+  - const EnqueueCount: u32
+  - const NewContenderPerGame: u32
+  - const MaxInstances: u32
+
+- interface IContender
+  - owner() returns address
+  - play(uint256 round, uint256 prevPlay, uint256 otherPrevPlay) returns uint256
+
+## Copy the Echo contract
+
+https://evmdocs.acala.network/tutorials/waffle-tutorials/echo-tutorial
+
+- Repo: https://github.com/AcalaNetwork/waffle-tutorials
+- `cd echo`
+- `yarn`
+- `yarn test`
+- `yarn deploy`
 
 ----
 
@@ -125,6 +160,7 @@ Docs: https://evmdocs.acala.network
 	- [Call EVM from Pallet](#call-evm-from-pallet)
 	- [Call Pallet from EVM](#call-pallet-from-evm)
 	- [Build a Smart Contract Arena pallet](#build-a-smart-contract-arena-pallet)
+	- [Copy the Echo contract](#copy-the-echo-contract)
 - [1. Introduction](#1-introduction)
 - [2. Overview](#2-overview)
 	- [2.1. aUSD and the Honzon stablecoin protocol](#21-ausd-and-the-honzon-stablecoin-protocol)

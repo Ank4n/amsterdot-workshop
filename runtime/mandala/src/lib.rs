@@ -1683,6 +1683,18 @@ impl module_idle_scheduler::Config for Runtime {
 	type DisableBlockThreshold = ConstU32<6>;
 }
 
+impl module_arena::Config for Runtime {
+	type Event = Event;
+	type EVM = EVM;
+	type AddressMapping = EvmAddressMapping<Runtime>;
+	type PlayPerRound = ConstU32<10>;
+	type MaxContenderInstancesCount = ConstU32<150>;
+	type MaxQueueSize = ConstU32<300>;
+	type WinnerCount = ConstU32<3>;
+	type EnqueueCount = ConstU32<5>;
+	type MaxInstancesPerContender = ConstU32<10>;
+}
+
 impl cumulus_pallet_aura_ext::Config for Runtime {}
 
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
@@ -1925,6 +1937,8 @@ construct_runtime!(
 
 		// Parachain System, always put it at the end
 		ParachainSystem: cumulus_pallet_parachain_system = 160,
+
+		Arena: module_arena = 220,
 
 		// Dev
 		Sudo: pallet_sudo = 255,

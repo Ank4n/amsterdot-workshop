@@ -5573,6 +5573,7 @@ dependencies = [
  "hex",
  "hex-literal",
  "libsecp256k1",
+ "module-arena",
  "module-asset-registry",
  "module-auction-manager",
  "module-cdp-engine",
@@ -5888,9 +5889,13 @@ name = "module-arena"
 version = "2.5.0"
 dependencies = [
  "acala-primitives",
+ "ethereum-types",
  "frame-support",
  "frame-system",
+ "module-evm",
+ "module-evm-utility-macro",
  "module-support",
+ "num_enum",
  "orml-tokens",
  "orml-traits",
  "parity-scale-codec",
