@@ -5896,13 +5896,10 @@ dependencies = [
  "module-evm-utility-macro",
  "module-support",
  "num_enum",
- "orml-tokens",
- "orml-traits",
  "parity-scale-codec",
  "scale-info",
  "serde",
  "sp-core",
- "sp-io",
  "sp-runtime",
  "sp-std",
 ]

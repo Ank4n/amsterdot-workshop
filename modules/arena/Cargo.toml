@@ -13,17 +13,12 @@ frame-support = { git = "https://github.com/paritytech/substrate", branch = "pol
 frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18", default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18", default-features = false }
-orml-traits = { package = "orml-traits", path = "../../orml/traits", default-features = false }
 support = { package = "module-support", path = "../support", default-features = false }
 primitives = { package = "acala-primitives", path = "../../primitives", default-features = false }
 module-evm = { path = "../evm", default-features = false }
 module-evm-utility-macro = { path = "../evm-utility/macro" }
 num_enum = { version = "0.5.1", default-features = false }
 ethereum-types = { version = "0.13.1", default-features = false }
-
-[dev-dependencies]
-sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.18" }
-orml-tokens = { path = "../../orml/tokens" }
 
 [features]
 default = ["std"]
@@ -36,7 +31,6 @@ std = [
 	"frame-system/std",
 	"sp-core/std",
 	"sp-std/std",
-	"orml-traits/std",
 	"support/std",
 	"primitives/std",
 	"module-evm/std",

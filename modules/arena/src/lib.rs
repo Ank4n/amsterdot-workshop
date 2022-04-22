@@ -19,12 +19,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::unused_unit)]
 
-use frame_support::{pallet_prelude::*, transactional};
+use frame_support::{log, pallet_prelude::*, transactional};
 use frame_system::pallet_prelude::*;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use sp_core::{H160, U256};
 use sp_runtime::traits::{UniqueSaturatedInto, Zero};
-use sp_std::collections::btree_map::BTreeMap;
+use sp_std::{collections::btree_map::BTreeMap, prelude::*};
 use support::{AddressMapping, ExecutionMode, InvokeContext, EVM};
 
 pub use module::*;
@@ -33,14 +33,15 @@ pub use module::*;
 pub struct ContractInfo {
 	point: u128,
 	instance_count: u32,
+	wins: u32,
 }
 
 #[derive(Encode, Decode, Eq, PartialEq, Clone, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub enum Contender {
 	Contract(H160),
 	AlwaysZero,
-	BlockNumber,
-	CopyCat,
+	Rotate,
+	Smart,
 }
 
 impl Contender {
@@ -84,18 +85,25 @@ pub mod module {
 
 		#[pallet::constant]
 		type MaxInstancesPerContender: Get<u32>;
+
+		type ContractInvoker: Get<Self::AccountId>;
 	}
 
 	#[pallet::error]
 	pub enum Error<T> {
 		QueueFull,
 		InvalidOwner,
+		AlreadyRegistered,
 	}
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(crate) fn deposit_event)]
 	pub enum Event<T: Config> {
-		ContenderRegistered { contender: Contender },
+		InstanceRegistered { contender: Contender, id: u32 },
+		InstanceRemoved { contender: Contender, id: u32 },
+		PlayStarted { contenders: (u32, u32) },
+		PlayRoundResult { result: (U256, U256) },
+		PlayEnded { winner: Option<u32> },
 		GameResult { points: BTreeMap<u32, i32> },
 	}
 
@@ -111,9 +119,6 @@ pub mod module {
 
 	#[pallet::storage]
 	pub type ContenderInstancesCount<T: Config> = StorageValue<_, u32, ValueQuery>;
-
-	#[pallet::storage]
-	pub type ContenderInstancesId<T: Config> = StorageValue<_, u32, ValueQuery>;
 
 	#[pallet::storage]
 	pub type ContenderQueue<T: Config> = StorageValue<_, Vec<Contender>, ValueQuery>;
@@ -144,25 +149,29 @@ pub mod module {
 			for (id1, contender1) in Contenders::<T>::iter() {
 				for (id2, contender2) in Contenders::<T>::iter() {
 					if contender1.is_contract() {
+						Self::deposit_event(Event::<T>::PlayStarted { contenders: (id1, id2) });
 						let winner = Self::play(&contender1, &contender2);
 						if let Some(winner) = winner {
 							if winner == &contender1 {
 								add_point(id1, 2, &contender1);
 								add_point(id2, -1, &contender2);
+								Self::deposit_event(Event::<T>::PlayEnded { winner: Some(id1) })
 							} else {
 								add_point(id1, -1, &contender1);
 								add_point(id2, 2, &contender2);
+								Self::deposit_event(Event::<T>::PlayEnded { winner: Some(id2) })
 							}
 						} else {
 							add_point(id1, 1, &contender1);
 							add_point(id2, 1, &contender2);
+							Self::deposit_event(Event::<T>::PlayEnded { winner: None })
 						}
 					}
 				}
 			}
 
 			let block_number: u128 = n.unique_saturated_into();
-			let multipler = (block_number / 1800).saturating_sub(7200);
+			let multipler = (block_number / 1800).saturating_sub(7200) + 1;
 			for (id, point) in game_points.iter() {
 				let contract = Contenders::<T>::get(id);
 				if let Some(Contender::Contract(contract)) = contract {
@@ -201,17 +210,31 @@ pub mod module {
 				let contender = Contenders::<T>::get(winner);
 				if let Some(contender) = contender {
 					Self::add_contender(&contender, 1);
+					if let Contender::Contract(ref contract) = contender {
+						ContractInfos::<T>::mutate(contract, |info| {
+							info.wins += 1;
+						});
+					}
 				}
 			}
 
-			let to_remove = ContenderInstancesCount::<T>::get().saturating_sub(T::MaxInstancesPerContender::get());
+			let instances_count = ContenderInstancesCount::<T>::get();
+			let to_remove = instances_count.saturating_sub(T::MaxContenderInstancesCount::get());
 			if to_remove > 0 {
 				for (id, _) in results.iter().rev().take(to_remove as usize) {
-					Contenders::<T>::remove(id);
+					let contender = Contenders::<T>::take(id);
+					if let Some(contender) = contender {
+						if let Contender::Contract(ref contract) = contender {
+							ContractInfos::<T>::mutate(contract, |info| {
+								info.instance_count -= 1;
+							});
+						}
+						Self::deposit_event(Event::<T>::InstanceRemoved { contender, id: *id });
+					}
 				}
-			}
 
-			ContenderInstancesCount::<T>::put(T::MaxInstancesPerContender::get());
+				ContenderInstancesCount::<T>::put(instances_count - to_remove);
+			}
 
 			0
 		}
@@ -223,6 +246,11 @@ pub mod module {
 		#[transactional]
 		pub fn register(origin: OriginFor<T>, contract: H160) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+			ensure!(
+				!ContractInfos::<T>::contains_key(&contract),
+				Error::<T>::AlreadyRegistered
+			);
+
 			let input = Into::<u32>::into(Action::Owner).to_be_bytes().to_vec();
 			let info = T::EVM::execute(
 				InvokeContext {
@@ -236,8 +264,7 @@ pub mod module {
 				0,
 				ExecutionMode::View,
 			)?;
-
-			let owner = H160::decode(&mut info.value.as_slice()).map_err(|_| Error::<T>::InvalidOwner)?;
+			let owner = H160::decode(&mut &info.value[12..]).map_err(|_| Error::<T>::InvalidOwner)?;
 			let owner = T::AddressMapping::get_account_id(&owner);
 			ensure!(owner == who, Error::<T>::InvalidOwner);
 
@@ -248,10 +275,10 @@ pub mod module {
 
 		#[pallet::weight(0)]
 		#[transactional]
-		pub fn register_contender(origin: OriginFor<T>, contender: Contender) -> DispatchResult {
+		pub fn register_contender(origin: OriginFor<T>, contender: Contender, count: u32) -> DispatchResult {
 			ensure_root(origin)?;
 
-			Self::do_register_contender(contender)?;
+			Self::add_contender(&contender, count);
 
 			Ok(())
 		}
@@ -262,7 +289,7 @@ impl<T: Config> Pallet<T> {
 	fn add_contender(contender: &Contender, mut count: u32) {
 		if let Contender::Contract(contract) = contender {
 			ContractInfos::<T>::mutate(contract, |info| {
-				let max = T::MaxContenderInstancesCount::get() - info.instance_count;
+				let max = T::MaxInstancesPerContender::get() - info.instance_count;
 				count = count.min(max);
 				info.instance_count += count;
 			});
@@ -279,14 +306,16 @@ impl<T: Config> Pallet<T> {
 		});
 
 		for i in 0..count {
-			Contenders::<T>::insert(id + i, &contender);
+			let instance_id = id + i;
+			Contenders::<T>::insert(instance_id, &contender);
+
+			Self::deposit_event(Event::<T>::InstanceRegistered {
+				contender: contender.clone(),
+				id: instance_id,
+			})
 		}
 
 		ContenderInstancesCount::<T>::mutate(|c| *c += count);
-
-		Self::deposit_event(Event::<T>::ContenderRegistered {
-			contender: contender.clone(),
-		})
 	}
 
 	fn do_register_contender(contender: Contender) -> DispatchResult {
@@ -312,11 +341,12 @@ impl<T: Config> Pallet<T> {
 				input.extend_from_slice(U256::from(round).encode().as_slice());
 				input.extend_from_slice(prev_play.encode().as_slice());
 				input.extend_from_slice(other_prev_play.encode().as_slice());
+				let invoker = T::AddressMapping::get_default_evm_address(&T::ContractInvoker::get());
 				let info = T::EVM::execute(
 					InvokeContext {
 						contract: contract.clone(),
-						sender: Default::default(),
-						origin: Default::default(),
+						sender: invoker,
+						origin: invoker,
 					},
 					input,
 					Default::default(),
@@ -326,17 +356,15 @@ impl<T: Config> Pallet<T> {
 				);
 
 				if let Ok(info) = info {
-					U256::decode(&mut info.value.as_slice()).unwrap_or_default()
+					log::warn!(target: "arena", "info2 {:?}", info.value);
+					U256::from(info.value.as_slice())
 				} else {
 					U256::zero()
 				}
 			}
 			Contender::AlwaysZero => U256::zero(),
-			Contender::BlockNumber => {
-				let block_number: u64 = frame_system::Pallet::<T>::block_number().unique_saturated_into();
-				U256::from(block_number)
-			}
-			Contender::CopyCat => other_prev_play,
+			Contender::Rotate => U256::from(round),
+			Contender::Smart => other_prev_play.div_mod(3u32.into()).1 + U256::from(2u32),
 		}
 	}
 
@@ -345,9 +373,15 @@ impl<T: Config> Pallet<T> {
 		let mut prev_play_b = U256::zero();
 		let mut point_a = 0u32;
 		let mut point_b = 0u32;
+
 		for round in 0..T::PlayPerRound::get() {
 			let play_a = Self::contender_play(a, round, prev_play_a, prev_play_b);
 			let play_b = Self::contender_play(b, round, prev_play_b, prev_play_a);
+
+			Self::deposit_event(Event::<T>::PlayRoundResult {
+				result: (play_a, play_b),
+			});
+
 			prev_play_a = play_a;
 			prev_play_b = play_b;
 			let play_a: u8 = play_a.div_mod(3.into()).1.unique_saturated_into();

@@ -1687,12 +1687,13 @@ impl module_arena::Config for Runtime {
 	type Event = Event;
 	type EVM = EVM;
 	type AddressMapping = EvmAddressMapping<Runtime>;
-	type PlayPerRound = ConstU32<10>;
-	type MaxContenderInstancesCount = ConstU32<150>;
+	type PlayPerRound = ConstU32<5>;
+	type MaxContenderInstancesCount = ConstU32<100>;
 	type MaxQueueSize = ConstU32<300>;
 	type WinnerCount = ConstU32<3>;
 	type EnqueueCount = ConstU32<5>;
-	type MaxInstancesPerContender = ConstU32<10>;
+	type MaxInstancesPerContender = ConstU32<6>;
+	type ContractInvoker = TreasuryAccount;
 }
 
 impl cumulus_pallet_aura_ext::Config for Runtime {}
