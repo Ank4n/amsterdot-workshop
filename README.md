@@ -131,6 +131,24 @@ https://evmdocs.acala.network/tutorials/waffle-tutorials/echo-tutorial
 - `yarn test`
 - `yarn deploy`
 
+## Implement and deploy your contender
+
+- Simple
+  - https://github.com/xlc/amsterdot-workshop/blob/master/workshop-files/arena/contracts/Simple.sol
+- Random
+  - https://github.com/xlc/amsterdot-workshop/blob/master/workshop-files/arena/contracts/Random.sol
+- Advanced
+  - https://github.com/xlc/amsterdot-workshop/blob/master/workshop-files/arena/contracts/Advanced.sol
+
+- Deploy Locally
+  - `yarn deploy`
+- Deploy to testnet
+  - `SEED="xxx xxx" yarn deploy:amsterdot`
+
+## Check Game result
+
+https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Famsterdot.aca-dev.network#/explorer
+
 ----
 
 <p align="center">
@@ -161,6 +179,8 @@ https://evmdocs.acala.network/tutorials/waffle-tutorials/echo-tutorial
 	- [Call Pallet from EVM](#call-pallet-from-evm)
 	- [Build a Smart Contract Arena pallet](#build-a-smart-contract-arena-pallet)
 	- [Copy the Echo contract](#copy-the-echo-contract)
+	- [Implement and deploy your contender](#implement-and-deploy-your-contender)
+	- [Check Game result](#check-game-result)
 - [1. Introduction](#1-introduction)
 - [2. Overview](#2-overview)
 	- [2.1. aUSD and the Honzon stablecoin protocol](#21-ausd-and-the-honzon-stablecoin-protocol)
