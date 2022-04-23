@@ -116,7 +116,6 @@ Docs: https://evmdocs.acala.network
   - const EnqueueCount: u32
   - const NewContenderPerGame: u32
   - const MaxInstances: u32
-
 - interface IContender
   - owner() returns address
   - play(uint256 round, uint256 prevPlay, uint256 otherPrevPlay) returns uint256
@@ -139,7 +138,6 @@ https://evmdocs.acala.network/tutorials/waffle-tutorials/echo-tutorial
   - https://github.com/xlc/amsterdot-workshop/blob/master/workshop-files/arena/contracts/Random.sol
 - Advanced
   - https://github.com/xlc/amsterdot-workshop/blob/master/workshop-files/arena/contracts/Advanced.sol
-
 - Deploy Locally
   - `yarn deploy`
 - Deploy to testnet
