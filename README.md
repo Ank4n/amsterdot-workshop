@@ -16,7 +16,7 @@ Docs: https://evmdocs.acala.network
   - https://polkadot.js.org/apps/#/explorer
   - Choose local network
 - Run `eth-rpc-adapter`
-  - `LOCAL_MODE=1 npx @acala-network/eth-rpc-adapter@2.4.4`
+  - `LOCAL_MODE=1 npx @acala-network/eth-rpc-adapter@2.4.6`
 - Setup Metamask:
   - Mnemonic: `fox sight canyon orphan hotel grow hedgehog build bless august weather swarm`
   - Add new network
