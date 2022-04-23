@@ -7,7 +7,7 @@ import Random from "../build/Random.json";
 import { setup } from "../utils/setup";
 
 const main = async () => {
-  const { wallet, provider } = await setup();
+  const { wallet, provider, pair } = await setup();
   const api = provider.api;
 
   console.log("Deploying");
@@ -32,11 +32,9 @@ const main = async () => {
   console.log("Advanced", instanceAdvanced.address);
   console.log("Random", instanceRandom.address);
 
-  const alice = createTestPairs().alice;
-
   const sendTx = (tx: ReturnType<typeof api.tx.system.remark>, nolog = false) =>
     new Promise<void>((resolve, reject) => {
-      tx.signAndSend(alice, (res) => {
+      tx.signAndSend(pair, (res) => {
         if (res.isInBlock || res.isFinalized) {
           resolve();
         }
