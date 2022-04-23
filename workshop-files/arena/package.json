@@ -32,7 +32,8 @@
   },
   "scripts": {
     "build": "waffle",
-    "deploy": "ts-node --transpile-only src/deploy.ts"
+    "deploy": "ts-node --transpile-only src/deploy.ts",
+	"deploy:amsterdot": "WS_URL=wss://amsterdot.aca-dev.network ts-node --transpile-only src/deploy-amsterdot.ts"
   },
   "dependencies": {
     "@acala-network/api": "^4.1.1",
